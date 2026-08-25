@@ -3,6 +3,7 @@ import pandas as pd
 import joblib
 import random
 
+
 # =========================================================
 # PAGE CONFIGURATION
 # =========================================================
@@ -13,8 +14,9 @@ st.set_page_config(
     layout="wide"
 )
 
+
 # =========================================================
-# LOAD DATA AND MODEL
+# LOAD DATA
 # =========================================================
 
 @st.cache_data
@@ -30,7 +32,7 @@ def load_model():
 try:
     df = load_data()
 except Exception as e:
-    st.error("❌ Could not load problems.csv")
+    st.error("Could not load problems.csv")
     st.write(e)
     st.stop()
 
@@ -38,7 +40,7 @@ except Exception as e:
 try:
     model = load_model()
 except Exception as e:
-    st.error("❌ Could not load model.pkl")
+    st.error("Could not load model.pkl")
     st.write(e)
     st.stop()
 
@@ -48,31 +50,24 @@ except Exception as e:
 # =========================================================
 
 def find_column(dataframe, possible_names):
-    """
-    Finds a column even if its name is slightly different.
-    """
+
     for name in possible_names:
         if name in dataframe.columns:
             return name
 
-    # Try lowercase matching
     lower_columns = {
         str(col).lower().strip(): col
         for col in dataframe.columns
     }
 
     for name in possible_names:
-        if name.lower() in lower_columns:
-            return lower_columns[name.lower()]
+        if name.lower().strip() in lower_columns:
+            return lower_columns[name.lower().strip()]
 
     return None
 
 
 def normalize_difficulty(value):
-    """
-    Converts different difficulty names into:
-    Easy / Medium / Difficult
-    """
 
     value = str(value).strip().lower()
 
@@ -82,39 +77,31 @@ def normalize_difficulty(value):
     if value in ["medium", "moderate", "intermediate"]:
         return "Medium"
 
-    if value in ["difficult", "difficultly", "hard", "advanced"]:
+    if value in ["difficult", "difficulty", "hard", "advanced"]:
         return "Difficult"
 
     return str(value).title()
 
 
 def get_question_features(question):
-    """
-    Creates the same five features used while training
-    the Decision Tree model.
-    """
 
     question = str(question).lower()
 
     question_length = len(question.split())
 
-    # Count possible hints in the question
     hint_count = question.count("hint")
 
-    # Check recursion-related words
     has_recursion = int(
         "recursion" in question
         or "recursive" in question
     )
 
-    # Check nested-loop-related words
     has_nested_loop = int(
         "nested loop" in question
         or "nested loops" in question
         or "two loops" in question
     )
 
-    # Check logarithmic complexity
     uses_logarithmic = int(
         "logarithmic" in question
         or "log n" in question
@@ -132,17 +119,201 @@ def get_question_features(question):
 
 
 def predict_difficulty(question):
-    """
-    Uses the trained ML model to predict difficulty.
-    """
 
     try:
+
         features = get_question_features(question)
+
         prediction = model.predict(features)[0]
+
         return normalize_difficulty(prediction)
 
     except Exception:
+
         return "Not available"
+
+
+def detect_concepts(question):
+
+    text = question.lower()
+
+    concepts = []
+
+    keywords = {
+        "Arrays": ["array", "arrays"],
+        "Strings": ["string", "strings"],
+        "Linked List": ["linked list", "linkedlist"],
+        "Stack": ["stack"],
+        "Queue": ["queue"],
+        "Tree": ["tree", "binary tree"],
+        "Graph": ["graph", "bfs", "dfs"],
+        "Recursion": ["recursion", "recursive"],
+        "Binary Search": ["binary search"],
+        "Sorting": ["sort", "sorting"],
+        "Hashing": ["hash", "hashmap", "dictionary"],
+        "Dynamic Programming": ["dynamic programming", "dp"],
+        "Greedy": ["greedy"],
+    }
+
+    for concept, words in keywords.items():
+
+        for word in words:
+
+            if word in text:
+                concepts.append(concept)
+                break
+
+    if not concepts:
+        concepts.append("General DSA")
+
+    return concepts
+
+
+def get_generic_hint(question, concepts):
+
+    text = question.lower()
+
+    if "binary search" in text:
+        return (
+            "Think about how you can repeatedly divide the search space "
+            "into two halves instead of checking every element."
+        )
+
+    if "recursion" in text or "recursive" in text:
+        return (
+            "Identify the base case first. Then determine how the problem "
+            "becomes smaller in each recursive call."
+        )
+
+    if "linked list" in text:
+        return (
+            "Think about how the current node connects to the next node. "
+            "Try solving it by carefully moving through the links."
+        )
+
+    if "tree" in text:
+        return (
+            "Think about the traversal required. Consider whether "
+            "DFS or BFS is more appropriate."
+        )
+
+    if "graph" in text:
+        return (
+            "Consider representing the graph using an adjacency list. "
+            "Then decide whether BFS or DFS fits the problem."
+        )
+
+    if "array" in text:
+        return (
+            "Try walking through the array once and keep track of the "
+            "information you need instead of repeatedly scanning it."
+        )
+
+    if "string" in text:
+        return (
+            "Look for patterns in the characters. Ask yourself whether "
+            "two pointers, hashing, or a frequency table could help."
+        )
+
+    return (
+        "Break the problem into smaller steps. Identify the input, output, "
+        "main operation, and the most efficient data structure you can use."
+    )
+
+
+def get_strategy(question, concepts):
+
+    if "Binary Search" in concepts:
+
+        return """
+1. Make sure the data is sorted.
+2. Find the middle element.
+3. Compare it with the target.
+4. Eliminate half of the search space.
+5. Repeat until the answer is found.
+
+Typical complexity: O(log n)
+"""
+
+    if "Recursion" in concepts:
+
+        return """
+1. Identify the base case.
+2. Define the recursive case.
+3. Reduce the problem size.
+4. Make the recursive call.
+5. Combine the returned result if necessary.
+"""
+
+    if "Graph" in concepts:
+
+        return """
+1. Represent the graph.
+2. Choose BFS or DFS.
+3. Keep track of visited nodes.
+4. Traverse the required nodes.
+5. Stop when the required condition is satisfied.
+"""
+
+    if "Tree" in concepts:
+
+        return """
+1. Identify the root.
+2. Decide which traversal is required.
+3. Visit the nodes systematically.
+4. Process each node according to the problem.
+"""
+
+    if "Array" in concepts:
+
+        return """
+1. Understand the required output.
+2. Traverse the array.
+3. Maintain the required information.
+4. Update the result when necessary.
+5. Check edge cases.
+"""
+
+    return """
+1. Understand the input and output.
+2. Break the problem into smaller steps.
+3. Choose a suitable data structure.
+4. Develop the basic algorithm.
+5. Analyze time and space complexity.
+"""
+
+
+def recommend_problem(topic, difficulty):
+
+    available = df.copy()
+
+    if topic != "All":
+
+        available = available[
+            available[topic_col]
+            .astype(str)
+            .str.strip()
+            .str.lower()
+            == topic.strip().lower()
+        ]
+
+    if difficulty_col is not None:
+
+        normalized = available[difficulty_col].apply(
+            normalize_difficulty
+        )
+
+        available = available[
+            normalized == difficulty
+        ]
+
+    if available.empty:
+        return None
+
+    return available.sample(
+        n=1,
+        random_state=random.randint(1, 100000)
+    ).iloc[0]
 
 
 # =========================================================
@@ -196,282 +367,475 @@ difficulty_col = find_column(
 
 
 # =========================================================
-# TITLE
+# VALIDATE DATA
+# =========================================================
+
+if topic_col is None or question_col is None:
+
+    st.error("Required columns were not found in problems.csv")
+
+    st.write(
+        "Available columns:",
+        list(df.columns)
+    )
+
+    st.stop()
+
+
+# =========================================================
+# HEADER
 # =========================================================
 
 st.title("🤖 AI DSA Tutor")
 
-st.subheader("Your Beginner-Friendly DSA Learning Assistant")
+st.subheader(
+    "Your AI-powered assistant for learning Data Structures and Algorithms"
+)
 
 st.write(
-    "Practice Data Structures and Algorithms with "
-    "difficulty-based questions and AI-powered difficulty prediction."
+    "Practice DSA problems, get ML-based difficulty predictions, "
+    "receive hints, understand concepts and improve your problem-solving skills."
 )
+
 
 st.divider()
 
 
 # =========================================================
-# CHECK REQUIRED COLUMNS
+# SIDEBAR
 # =========================================================
 
-if topic_col is None:
-    st.error("❌ Topic column was not found in problems.csv")
-    st.write("Available columns:", list(df.columns))
-    st.stop()
+with st.sidebar:
 
-if question_col is None:
-    st.error("❌ Question/Problem column was not found in problems.csv")
-    st.write("Available columns:", list(df.columns))
-    st.stop()
+    st.header("📚 DSA Topics")
 
-
-# =========================================================
-# TOPIC SELECTION
-# =========================================================
-
-st.markdown("### 📚 Choose a DSA Topic")
-
-topics = sorted(
-    df[topic_col]
-    .dropna()
-    .astype(str)
-    .unique()
-    .tolist()
-)
-
-selected_topic = st.selectbox(
-    "Select a topic:",
-    ["All"] + topics
-)
-
-
-# =========================================================
-# DIFFICULTY SELECTION
-# =========================================================
-
-st.markdown("### 🎯 Choose Difficulty Level")
-
-selected_difficulty = st.radio(
-    "Select the level you want to practice:",
-    ["Easy", "Medium", "Difficult"],
-    horizontal=True
-)
-
-
-# =========================================================
-# FILTER DATA
-# =========================================================
-
-filtered_df = df.copy()
-
-
-# Filter by topic
-if selected_topic != "All":
-
-    filtered_df = filtered_df[
-        filtered_df[topic_col]
+    topics = sorted(
+        df[topic_col]
+        .dropna()
         .astype(str)
-        .str.strip()
-        .str.lower()
-        == selected_topic.strip().lower()
-    ]
-
-
-# Filter by difficulty
-if difficulty_col is not None:
-
-    normalized_difficulties = (
-        filtered_df[difficulty_col]
-        .apply(normalize_difficulty)
+        .unique()
+        .tolist()
     )
 
-    filtered_df = filtered_df[
-        normalized_difficulties == selected_difficulty
-    ]
-
-
-# =========================================================
-# DISPLAY RESULT
-# =========================================================
-
-st.divider()
-
-if filtered_df.empty:
-
-    st.warning(
-        f"⚠️ No {selected_difficulty} problem was found "
-        f"for the topic '{selected_topic}'."
+    selected_topic = st.selectbox(
+        "Choose Topic",
+        ["All"] + topics
     )
+
+    st.divider()
 
     st.info(
-        "Your dataset needs to contain problems for this "
-        "topic and difficulty level."
+        """
+        **How this tutor works**
+
+        1. Choose a DSA topic.
+        2. Practice a problem.
+        3. Ask the ML model about difficulty.
+        4. Get hints and strategy.
+        5. Try another problem.
+        """
     )
 
-    st.stop()
+
+# =========================================================
+# MAIN TABS
+# =========================================================
+
+practice_tab, ai_tab = st.tabs(
+    ["🎯 Practice Problems", "🤖 AI Question Analyzer"]
+)
 
 
 # =========================================================
-# SELECT A PROBLEM
+# PRACTICE TAB
 # =========================================================
 
-# Randomly select one problem
-selected_row = filtered_df.sample(
-    n=1,
-    random_state=random.randint(1, 100000)
-).iloc[0]
+with practice_tab:
+
+    st.header("🎯 DSA Practice")
+
+    selected_difficulty = st.radio(
+        "Choose difficulty",
+        ["Easy", "Medium", "Difficult"],
+        horizontal=True
+    )
+
+    if "practice_problem" not in st.session_state:
+
+        st.session_state.practice_problem = None
 
 
-question = str(selected_row[question_col])
+    if st.button(
+        "🎲 Generate Practice Problem",
+        use_container_width=True
+    ):
+
+        problem = recommend_problem(
+            selected_topic,
+            selected_difficulty
+        )
+
+        st.session_state.practice_problem = problem
 
 
-# =========================================================
-# PROBLEM
-# =========================================================
-
-st.markdown("## 📄 Problem")
-
-st.info(question)
+    problem = st.session_state.practice_problem
 
 
-# =========================================================
-# HINT
-# =========================================================
+    if problem is None:
 
-st.markdown("## 💡 Hint")
+        st.info(
+            "Choose a topic and difficulty, then click "
+            "**Generate Practice Problem**."
+        )
 
-if hint_col is not None:
-
-    hint = selected_row[hint_col]
-
-    if pd.notna(hint):
-        with st.expander("Click to view hint"):
-            st.write(str(hint))
     else:
-        st.write("No hint available for this problem.")
 
-else:
-    st.write("No hint available.")
+        question = str(problem[question_col])
+
+        st.success("Problem generated successfully!")
+
+        st.markdown("## 📄 Problem")
+
+        st.info(question)
+
+
+        # ---------------------------------------------
+        # Problem information
+        # ---------------------------------------------
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+
+            st.markdown("### 📌 Topic")
+
+            st.write(
+                str(problem[topic_col])
+            )
+
+        with col2:
+
+            st.markdown("### 🎯 Difficulty")
+
+            if difficulty_col is not None:
+
+                actual = normalize_difficulty(
+                    problem[difficulty_col]
+                )
+
+            else:
+
+                actual = selected_difficulty
+
+            st.write(actual)
+
+        with col3:
+
+            st.markdown("### 🤖 ML Prediction")
+
+            prediction = predict_difficulty(question)
+
+            st.write(prediction)
+
+
+        # ---------------------------------------------
+        # Hint
+        # ---------------------------------------------
+
+        st.markdown("## 💡 Tutor Hint")
+
+        if hint_col is not None:
+
+            hint = problem[hint_col]
+
+            if pd.notna(hint):
+
+                with st.expander(
+                    "Click to reveal the dataset hint"
+                ):
+
+                    st.write(str(hint))
+
+            else:
+
+                concepts = detect_concepts(question)
+
+                with st.expander(
+                    "Click to reveal AI tutor hint"
+                ):
+
+                    st.write(
+                        get_generic_hint(
+                            question,
+                            concepts
+                        )
+                    )
+
+        else:
+
+            concepts = detect_concepts(question)
+
+            with st.expander(
+                "Click to reveal AI tutor hint"
+            ):
+
+                st.write(
+                    get_generic_hint(
+                        question,
+                        concepts
+                    )
+                )
+
+
+        # ---------------------------------------------
+        # Strategy
+        # ---------------------------------------------
+
+        with st.expander(
+            "🧠 Show Problem-Solving Strategy"
+        ):
+
+            concepts = detect_concepts(question)
+
+            st.write(
+                "Detected concepts:",
+                ", ".join(concepts)
+            )
+
+            st.code(
+                get_strategy(
+                    question,
+                    concepts
+                )
+            )
+
+
+        # ---------------------------------------------
+        # Complexity
+        # ---------------------------------------------
+
+        c1, c2 = st.columns(2)
+
+        with c1:
+
+            st.markdown("### ⏱️ Time Complexity")
+
+            if (
+                time_col is not None
+                and pd.notna(problem[time_col])
+            ):
+
+                st.code(
+                    str(problem[time_col])
+                )
+
+            else:
+
+                st.write(
+                    "Complexity not available in dataset."
+                )
+
+
+        with c2:
+
+            st.markdown("### 💾 Space Complexity")
+
+            if (
+                space_col is not None
+                and pd.notna(problem[space_col])
+            ):
+
+                st.code(
+                    str(problem[space_col])
+                )
+
+            else:
+
+                st.write(
+                    "Complexity not available in dataset."
+                )
+
+
+        st.divider()
+
+        if st.button(
+            "🔄 Generate Another Problem",
+            use_container_width=True
+        ):
+
+            st.session_state.practice_problem = None
+
+            st.rerun()
 
 
 # =========================================================
-# TOPIC
+# AI QUESTION ANALYZER
 # =========================================================
 
-st.markdown("## 📌 Topic")
+with ai_tab:
 
-st.write(str(selected_row[topic_col]))
+    st.header("🤖 Ask the AI DSA Tutor")
 
-
-# =========================================================
-# TIME COMPLEXITY
-# =========================================================
-
-st.markdown("## ⏱️ Time Complexity")
-
-if time_col is not None and pd.notna(selected_row[time_col]):
-
-    st.code(str(selected_row[time_col]))
-
-else:
-
-    st.write("Not available")
-
-
-# =========================================================
-# SPACE COMPLEXITY
-# =========================================================
-
-st.markdown("## 💾 Space Complexity")
-
-if space_col is not None and pd.notna(selected_row[space_col]):
-
-    st.code(str(selected_row[space_col]))
-
-else:
-
-    st.write("Not available")
-
-
-# =========================================================
-# SELECTED DIFFICULTY
-# =========================================================
-
-st.markdown("## 🎯 Selected Difficulty")
-
-if difficulty_col is not None:
-
-    actual_difficulty = normalize_difficulty(
-        selected_row[difficulty_col]
+    st.write(
+        "Enter your own DSA question or problem statement. "
+        "The ML model will analyze it and predict its difficulty."
     )
 
-else:
 
-    actual_difficulty = selected_difficulty
-
-
-if actual_difficulty == "Easy":
-    st.success("🟢 Easy")
-
-elif actual_difficulty == "Medium":
-    st.warning("🟡 Medium")
-
-else:
-    st.error("🔴 Difficult")
-
-
-# =========================================================
-# AI DIFFICULTY PREDICTION
-# =========================================================
-
-st.markdown("## 🤖 AI Difficulty Prediction")
-
-prediction = predict_difficulty(question)
-
-if prediction == "Easy":
-
-    st.success(
-        f"Predicted Difficulty: {prediction} 🟢"
-    )
-
-elif prediction == "Medium":
-
-    st.warning(
-        f"Predicted Difficulty: {prediction} 🟡"
-    )
-
-elif prediction == "Difficult":
-
-    st.error(
-        f"Predicted Difficulty: {prediction} 🔴"
-    )
-
-else:
-
-    st.info(
-        f"Predicted Difficulty: {prediction}"
+    user_question = st.text_area(
+        "Enter your DSA problem:",
+        placeholder=(
+            "Example: Find an element in a sorted array "
+            "using binary search."
+        ),
+        height=160
     )
 
 
+    if st.button(
+        "🔍 Analyze My Question",
+        use_container_width=True
+    ):
+
+        if not user_question.strip():
+
+            st.warning(
+                "Please enter a DSA question first."
+            )
+
+        else:
+
+            # -----------------------------------------
+            # ML prediction
+            # -----------------------------------------
+
+            prediction = predict_difficulty(
+                user_question
+            )
+
+            st.markdown(
+                "## 🤖 AI Difficulty Prediction"
+            )
+
+            if prediction == "Easy":
+
+                st.success(
+                    "🟢 Predicted Difficulty: Easy"
+                )
+
+            elif prediction == "Medium":
+
+                st.warning(
+                    "🟡 Predicted Difficulty: Medium"
+                )
+
+            elif prediction == "Difficult":
+
+                st.error(
+                    "🔴 Predicted Difficulty: Difficult"
+                )
+
+            else:
+
+                st.info(
+                    f"Predicted Difficulty: {prediction}"
+                )
+
+
+            # -----------------------------------------
+            # Concept detection
+            # -----------------------------------------
+
+            concepts = detect_concepts(
+                user_question
+            )
+
+            st.markdown(
+                "## 🧠 Detected DSA Concepts"
+            )
+
+            st.write(
+                ", ".join(concepts)
+            )
+
+
+            # -----------------------------------------
+            # AI hint
+            # -----------------------------------------
+
+            st.markdown(
+                "## 💡 Tutor Hint"
+            )
+
+            st.info(
+                get_generic_hint(
+                    user_question,
+                    concepts
+                )
+            )
+
+
+            # -----------------------------------------
+            # Strategy
+            # -----------------------------------------
+
+            st.markdown(
+                "## 📝 Suggested Approach"
+            )
+
+            st.code(
+                get_strategy(
+                    user_question,
+                    concepts
+                )
+            )
+
+
+            # -----------------------------------------
+            # Recommended problem
+            # -----------------------------------------
+
+            st.markdown(
+                "## 🎯 Recommended Practice Problem"
+            )
+
+            recommendation = recommend_problem(
+                "All",
+                prediction
+            )
+
+            if recommendation is not None:
+
+                st.success(
+                    str(
+                        recommendation[question_col]
+                    )
+                )
+
+                if topic_col is not None:
+
+                    st.write(
+                        "Topic:",
+                        str(
+                            recommendation[topic_col]
+                        )
+                    )
+
+            else:
+
+                st.info(
+                    "No matching practice problem "
+                    "was found in the dataset."
+                )
+
+
 # =========================================================
-# NEW PROBLEM BUTTON
-# =========================================================
-
-st.divider()
-
-if st.button("🔄 Get Another Problem"):
-
-    st.rerun()
-
-
-# =========================================================
-# INFORMATION
+# FOOTER
 # =========================================================
 
 st.divider()
 
 st.caption(
-    "AI DSA Tutor | Built with Python, Pandas, "
-    "Scikit-learn and Streamlit"
+    "AI DSA Tutor | Python • Pandas • Scikit-learn • "
+    "Decision Tree • Streamlit"
 )
