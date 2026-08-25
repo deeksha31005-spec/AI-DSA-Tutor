@@ -1,10 +1,10 @@
 import streamlit as st
 import pandas as pd
 import joblib
-import html
+import re
 
 # =========================================================
-# PAGE CONFIGURATION
+# PAGE CONFIG
 # =========================================================
 
 st.set_page_config(
@@ -15,425 +15,274 @@ st.set_page_config(
 )
 
 # =========================================================
-# CUSTOM PROFESSIONAL CSS
+# DARK PROFESSIONAL THEME
 # =========================================================
 
-st.markdown(
-    """
-    <style>
+st.markdown("""
+<style>
 
-    /* =========================
-       GLOBAL
-    ========================= */
-
+    /* Main application */
     .stApp {
-        background:
-            radial-gradient(
-                circle at top right,
-                rgba(124, 58, 237, 0.10),
-                transparent 28%
-            ),
-            radial-gradient(
-                circle at top left,
-                rgba(14, 165, 233, 0.08),
-                transparent 25%
-            ),
-            #f7f8fc;
+        background: #0b1020;
+        color: #f8fafc;
     }
 
-    .block-container {
-        max-width: 1450px;
+    .main .block-container {
+        max-width: 1400px;
         padding-top: 2rem;
         padding-bottom: 3rem;
     }
 
-    /* Hide default Streamlit menu/footer */
-
-    #MainMenu {
-        visibility: hidden;
-    }
-
-    footer {
-        visibility: hidden;
-    }
-
-    /* =========================
-       SIDEBAR
-    ========================= */
-
+    /* Sidebar */
     section[data-testid="stSidebar"] {
-        background:
-            linear-gradient(
-                180deg,
-                #111827 0%,
-                #172554 50%,
-                #1e1b4b 100%
-            );
-        border-right: none;
+        background: linear-gradient(180deg, #111936 0%, #0b1020 100%);
+        border-right: 1px solid #27345c;
     }
 
     section[data-testid="stSidebar"] * {
         color: #f8fafc !important;
     }
 
-    section[data-testid="stSidebar"] .stSelectbox label {
+    /* Headings */
+    h1, h2, h3 {
+        color: #ffffff !important;
+    }
+
+    p, label {
         color: #cbd5e1 !important;
-        font-weight: 600;
     }
 
-    section[data-testid="stSidebar"] hr {
-        border-color: rgba(255,255,255,0.15);
-    }
-
-    /* =========================
-       HERO
-    ========================= */
-
+    /* Hero */
     .hero {
-        padding: 35px 38px;
+        background: linear-gradient(
+            135deg,
+            #171f4b 0%,
+            #30256d 50%,
+            #4c2f91 100%
+        );
+        padding: 38px;
         border-radius: 24px;
-        background:
-            linear-gradient(
-                135deg,
-                #111827 0%,
-                #312e81 48%,
-                #4f46e5 100%
-            );
-        box-shadow:
-            0 18px 45px rgba(49, 46, 129, 0.22);
-        margin-bottom: 25px;
-        color: white;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .hero::after {
-        content: "";
-        position: absolute;
-        width: 220px;
-        height: 220px;
-        right: -70px;
-        top: -70px;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.08);
+        margin-bottom: 30px;
+        border: 1px solid #5b4bb7;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.35);
     }
 
     .hero-badge {
         display: inline-block;
-        padding: 7px 14px;
+        background: rgba(255,255,255,0.12);
+        border: 1px solid rgba(255,255,255,0.20);
+        padding: 8px 16px;
         border-radius: 30px;
-        background: rgba(255,255,255,0.13);
-        border: 1px solid rgba(255,255,255,0.18);
         font-size: 13px;
-        font-weight: 600;
-        margin-bottom: 13px;
+        letter-spacing: 1px;
+        color: #ddd6fe;
+        margin-bottom: 15px;
     }
 
     .hero-title {
-        font-size: 43px;
+        font-size: 48px;
         font-weight: 800;
-        margin: 0;
-        letter-spacing: -1px;
+        margin-bottom: 10px;
+        color: white;
     }
 
     .hero-subtitle {
-        font-size: 17px;
-        color: #dbeafe;
-        margin-top: 9px;
-        max-width: 780px;
-        line-height: 1.6;
+        font-size: 18px;
+        line-height: 1.7;
+        color: #ddd6fe;
+        max-width: 850px;
     }
 
-    /* =========================
-       SECTION TITLES
-    ========================= */
-
-    .section-title {
-        font-size: 24px;
-        font-weight: 800;
-        color: #111827;
-        margin-top: 25px;
-        margin-bottom: 13px;
-    }
-
-    .section-subtitle {
-        color: #64748b;
-        font-size: 14px;
-        margin-top: -7px;
-        margin-bottom: 16px;
-    }
-
-    /* =========================
-       METRIC CARDS
-    ========================= */
-
+    /* Cards */
     .metric-card {
-        background: rgba(255,255,255,0.96);
-        border: 1px solid #e5e7eb;
+        background: linear-gradient(145deg, #151d3b, #10162d);
+        border: 1px solid #29365e;
         border-radius: 18px;
-        padding: 21px;
-        min-height: 120px;
-        box-shadow: 0 7px 22px rgba(15,23,42,0.06);
-        transition: all 0.2s ease;
-    }
-
-    .metric-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 12px 28px rgba(15,23,42,0.10);
+        padding: 22px;
+        min-height: 135px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.25);
     }
 
     .metric-icon {
-        font-size: 24px;
-        margin-bottom: 5px;
-    }
-
-    .metric-number {
-        font-size: 28px;
-        font-weight: 800;
-        color: #111827;
-    }
-
-    .metric-label {
-        font-size: 13px;
-        color: #64748b;
-        margin-top: 2px;
-    }
-
-    /* =========================
-       PROBLEM CARD
-    ========================= */
-
-    .problem-card {
-        background: white;
-        border-radius: 22px;
-        padding: 30px;
-        border: 1px solid #e5e7eb;
-        box-shadow: 0 9px 28px rgba(15,23,42,0.07);
-        margin-bottom: 20px;
-    }
-
-    .problem-label {
-        color: #6366f1;
-        font-size: 13px;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 10px;
-    }
-
-    .problem-question {
-        font-size: 23px;
-        font-weight: 750;
-        color: #111827;
-        line-height: 1.45;
-    }
-
-    /* =========================
-       CODE / EXAMPLE CARDS
-    ========================= */
-
-    .example-card {
-        background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 18px;
-        padding: 20px;
-        box-shadow: 0 6px 20px rgba(15,23,42,0.05);
-    }
-
-    .example-title {
-        font-size: 15px;
-        font-weight: 750;
-        color: #334155;
-        margin-bottom: 8px;
-    }
-
-    /* =========================
-       INFO CARDS
-    ========================= */
-
-    .info-card {
-        background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 18px;
-        padding: 22px;
-        text-align: center;
-        box-shadow: 0 6px 20px rgba(15,23,42,0.05);
-    }
-
-    .info-icon {
         font-size: 27px;
     }
 
+    .metric-number {
+        font-size: 30px;
+        font-weight: 800;
+        color: #ffffff;
+        margin-top: 8px;
+    }
+
+    .metric-label {
+        color: #94a3b8;
+        font-size: 14px;
+        margin-top: 4px;
+    }
+
+    /* Section */
+    .section-title {
+        font-size: 25px;
+        font-weight: 750;
+        color: white;
+        margin-top: 25px;
+        margin-bottom: 15px;
+    }
+
+    /* Problem card */
+    .problem-card {
+        background: #111936;
+        border: 1px solid #29365e;
+        border-radius: 20px;
+        padding: 28px;
+        margin-top: 10px;
+        margin-bottom: 20px;
+        box-shadow: 0 12px 35px rgba(0,0,0,0.25);
+    }
+
+    .problem-title {
+        font-size: 25px;
+        font-weight: 750;
+        color: #ffffff;
+        margin-bottom: 15px;
+    }
+
+    .problem-text {
+        font-size: 17px;
+        line-height: 1.8;
+        color: #dbeafe;
+    }
+
+    /* Info cards */
+    .info-card {
+        background: #121a34;
+        border: 1px solid #29365e;
+        border-radius: 16px;
+        padding: 20px;
+        min-height: 110px;
+    }
+
     .info-label {
+        color: #94a3b8;
         font-size: 13px;
-        color: #64748b;
-        margin-top: 6px;
+        margin-bottom: 8px;
     }
 
     .info-value {
-        font-size: 21px;
-        font-weight: 800;
-        color: #111827;
-        margin-top: 4px;
+        color: #ffffff;
+        font-size: 17px;
+        font-weight: 650;
     }
 
-    /* =========================
-       AI RESULT
-    ========================= */
+    /* Difficulty badges */
+    .difficulty-easy {
+        display: inline-block;
+        padding: 9px 18px;
+        border-radius: 30px;
+        background: #064e3b;
+        color: #6ee7b7;
+        border: 1px solid #10b981;
+        font-weight: 750;
+        font-size: 15px;
+    }
 
-    .ai-panel {
-        background:
-            linear-gradient(
-                135deg,
-                #ffffff 0%,
-                #f5f3ff 100%
-            );
-        border: 1px solid #ddd6fe;
-        border-radius: 22px;
-        padding: 27px;
-        box-shadow: 0 9px 28px rgba(79,70,229,0.10);
+    .difficulty-medium {
+        display: inline-block;
+        padding: 9px 18px;
+        border-radius: 30px;
+        background: #713f12;
+        color: #fde68a;
+        border: 1px solid #f59e0b;
+        font-weight: 750;
+        font-size: 15px;
+    }
+
+    .difficulty-hard {
+        display: inline-block;
+        padding: 9px 18px;
+        border-radius: 30px;
+        background: #7f1d1d;
+        color: #fecaca;
+        border: 1px solid #ef4444;
+        font-weight: 750;
+        font-size: 15px;
+    }
+
+    /* AI prediction */
+    .ai-box {
+        background: linear-gradient(135deg, #19134b, #261b61);
+        border: 1px solid #6d5bd0;
+        border-radius: 20px;
+        padding: 25px;
+        margin-top: 20px;
+        box-shadow: 0 15px 40px rgba(76,47,145,0.25);
     }
 
     .ai-title {
-        color: #4f46e5;
-        font-size: 14px;
+        font-size: 16px;
+        color: #c4b5fd;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+
+    .ai-prediction {
+        font-size: 34px;
+        font-weight: 850;
+        color: white;
+        margin-top: 8px;
+    }
+
+    /* Hint */
+    .hint-box {
+        background: linear-gradient(135deg, #132e2a, #102522);
+        border: 1px solid #1f8f72;
+        border-radius: 18px;
+        padding: 22px;
+        margin-top: 15px;
+        color: #d1fae5;
+        line-height: 1.7;
+    }
+
+    .hint-number {
+        color: #6ee7b7;
         font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 1px;
     }
 
-    .ai-description {
-        color: #64748b;
-        font-size: 13px;
-        margin-top: 4px;
-        margin-bottom: 18px;
-    }
-
-    /* =========================
-       DIFFICULTY BADGES
-    ========================= */
-
-    .difficulty-badge {
-        display: inline-block;
-        padding: 11px 25px;
-        border-radius: 40px;
-        font-size: 22px;
-        font-weight: 800;
-    }
-
-    .easy {
-        background: #dcfce7;
-        color: #166534;
-        border: 1px solid #bbf7d0;
-    }
-
-    .medium {
-        background: #fef3c7;
-        color: #92400e;
-        border: 1px solid #fde68a;
-    }
-
-    .hard {
-        background: #fee2e2;
-        color: #991b1b;
-        border: 1px solid #fecaca;
-    }
-
-    /* =========================
-       HINT BOX
-    ========================= */
-
-    .hint-intro {
-        background:
-            linear-gradient(
-                135deg,
-                #eef2ff,
-                #f5f3ff
-            );
-        border: 1px solid #ddd6fe;
-        border-radius: 17px;
-        padding: 17px 20px;
-        margin-bottom: 12px;
-        color: #4338ca;
-        font-size: 14px;
-        font-weight: 600;
-    }
-
-    /* =========================
-       FEATURE BOX
-    ========================= */
-
-    .feature-box {
-        background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 15px;
-        padding: 14px;
-        text-align: center;
-        box-shadow: 0 4px 15px rgba(15,23,42,0.04);
-    }
-
-    .feature-value {
-        font-size: 19px;
-        font-weight: 800;
-        color: #111827;
-    }
-
-    .feature-label {
-        font-size: 11px;
-        color: #64748b;
-        margin-top: 3px;
-    }
-
-    /* =========================
-       FOOTER
-    ========================= */
-
-    .footer {
-        margin-top: 45px;
-        padding-top: 20px;
-        border-top: 1px solid #e5e7eb;
-        text-align: center;
-        color: #94a3b8;
-        font-size: 12px;
-    }
-
-    /* =========================
-       STREAMLIT INPUTS
-    ========================= */
-
-    div[data-baseweb="select"] > div {
-        border-radius: 12px !important;
-    }
-
-    .stButton button {
+    /* Buttons */
+    .stButton > button {
         border-radius: 12px;
+        border: 1px solid #5b4bb7;
+        background: linear-gradient(135deg, #4c2f91, #6d4cc7);
+        color: white;
         font-weight: 700;
     }
 
-    /* =========================
-       MOBILE
-    ========================= */
-
-    @media (max-width: 768px) {
-
-        .hero-title {
-            font-size: 31px;
-        }
-
-        .hero {
-            padding: 25px;
-        }
-
-        .problem-card {
-            padding: 22px;
-        }
-
+    .stButton > button:hover {
+        border-color: #a78bfa;
+        color: white;
     }
 
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+    /* Select boxes */
+    div[data-baseweb="select"] > div {
+        background-color: #111936;
+        border-color: #34436f;
+        color: white;
+    }
+
+    /* Expanders */
+    div[data-testid="stExpander"] {
+        background: #111936;
+        border: 1px solid #29365e;
+        border-radius: 15px;
+    }
+
+    /* Divider */
+    hr {
+        border-color: #29365e;
+    }
+
+</style>
+""", unsafe_allow_html=True)
 
 
 # =========================================================
@@ -450,38 +299,245 @@ def load_model():
     return joblib.load("model.pkl")
 
 
-df = load_data()
-model = load_model()
+try:
+    df = load_data()
+    model = load_model()
+except Exception as e:
+    st.error("❌ Could not load the project files.")
+    st.code(str(e))
+    st.stop()
 
 
 # =========================================================
-# DATASET INFORMATION
+# HELPER FUNCTIONS
 # =========================================================
 
-total_problems = len(df)
+def find_column(dataframe, possible_names):
+    """
+    Find a column without depending on exact capitalization.
+    """
+    normalized = {
+        str(col).strip().lower().replace(" ", "_"): col
+        for col in dataframe.columns
+    }
 
-total_topics = (
-    df["topic"].dropna().nunique()
-    if "topic" in df.columns
-    else 0
+    for name in possible_names:
+        key = name.strip().lower().replace(" ", "_")
+        if key in normalized:
+            return normalized[key]
+
+    return None
+
+
+def count_hints(value):
+    """
+    Count actual hints stored in the CSV.
+    Supports:
+    - one hint
+    - numbered hints
+    - hints separated by |
+    - hints separated by new lines
+    """
+    if pd.isna(value):
+        return 0
+
+    text = str(value).strip()
+
+    if not text:
+        return 0
+
+    # Try common separators
+    if "|" in text:
+        parts = [x.strip() for x in text.split("|") if x.strip()]
+        return len(parts)
+
+    # Numbered hints such as:
+    # Hint 1: ...
+    # Hint 2: ...
+    numbered = re.findall(
+        r"(?:hint\s*\d+\s*:)",
+        text,
+        flags=re.IGNORECASE
+    )
+
+    if numbered:
+        return len(numbered)
+
+    # Multiple lines
+    lines = [x.strip() for x in text.splitlines() if x.strip()]
+
+    if len(lines) > 1:
+        return len(lines)
+
+    return 1
+
+
+def get_hints(value):
+    """
+    Return actual hints from CSV in a clean list.
+    """
+    if pd.isna(value):
+        return []
+
+    text = str(value).strip()
+
+    if not text:
+        return []
+
+    # Pipe-separated
+    if "|" in text:
+        return [x.strip() for x in text.split("|") if x.strip()]
+
+    # Numbered hints
+    pattern = r"(?:Hint\s*\d+\s*:\s*)"
+    parts = re.split(pattern, text, flags=re.IGNORECASE)
+
+    parts = [x.strip() for x in parts if x.strip()]
+
+    if len(parts) > 1:
+        return parts
+
+    # Newline separated
+    lines = [x.strip() for x in text.splitlines() if x.strip()]
+
+    if len(lines) > 1:
+        return lines
+
+    return [text]
+
+
+def get_text(row, column):
+    if column is None:
+        return "Not available"
+
+    value = row[column]
+
+    if pd.isna(value):
+        return "Not available"
+
+    return str(value)
+
+
+def calculate_features(row):
+    """
+    Create the EXACT five features used when model.pkl was trained.
+    """
+
+    question_col = find_column(
+        df,
+        [
+            "question",
+            "problem",
+            "description",
+            "problem_statement",
+            "question_text"
+        ]
+    )
+
+    hint_col = find_column(
+        df,
+        [
+            "hints",
+            "hint",
+            "solution_hint",
+            "solution_hints"
+        ]
+    )
+
+    text = get_text(row, question_col).lower()
+
+    question_length = len(text)
+
+    hint_count = count_hints(row[hint_col]) if hint_col else 0
+
+    has_recursion = int(
+        any(word in text for word in [
+            "recursion",
+            "recursive",
+            "recursive function"
+        ])
+    )
+
+    has_nested_loop = int(
+        (
+            "nested loop" in text
+            or "two loops" in text
+            or "nested loops" in text
+        )
+    )
+
+    uses_logarithmic = int(
+        any(word in text for word in [
+            "binary search",
+            "logarithmic",
+            "o(log",
+            "o(log n)",
+            "divide and conquer"
+        ])
+    )
+
+    return pd.DataFrame([{
+        "question_length": question_length,
+        "hint_count": hint_count,
+        "has_recursion": has_recursion,
+        "has_nested_loop": has_nested_loop,
+        "uses_logarithmic": uses_logarithmic
+    }])
+
+
+def difficulty_badge(difficulty):
+
+    difficulty = str(difficulty).strip().lower()
+
+    if difficulty == "easy":
+        return '<span class="difficulty-easy">🟢 EASY</span>'
+
+    if difficulty == "medium":
+        return '<span class="difficulty-medium">🟡 MEDIUM</span>'
+
+    if difficulty == "hard":
+        return '<span class="difficulty-hard">🔴 HARD</span>'
+
+    return f'<span class="difficulty-medium">{difficulty.upper()}</span>'
+
+
+# =========================================================
+# FIND DATASET COLUMNS
+# =========================================================
+
+topic_col = find_column(
+    df,
+    ["topic", "category", "data_structure", "type"]
 )
 
-easy_count = (
-    int((df["difficulty"] == "Easy").sum())
-    if "difficulty" in df.columns
-    else 0
+problem_col = find_column(
+    df,
+    ["problem", "question", "title", "problem_name", "name"]
 )
 
-medium_count = (
-    int((df["difficulty"] == "Medium").sum())
-    if "difficulty" in df.columns
-    else 0
+description_col = find_column(
+    df,
+    ["description", "problem_statement", "question", "problem"]
 )
 
-hard_count = (
-    int((df["difficulty"] == "Hard").sum())
-    if "difficulty" in df.columns
-    else 0
+hint_col = find_column(
+    df,
+    ["hints", "hint", "solution_hint", "solution_hints"]
+)
+
+time_col = find_column(
+    df,
+    ["time_complexity", "time", "time_complexity_big_o"]
+)
+
+space_col = find_column(
+    df,
+    ["space_complexity", "space", "space_complexity_big_o"]
+)
+
+difficulty_col = find_column(
+    df,
+    ["difficulty", "level"]
 )
 
 
@@ -491,122 +547,107 @@ hard_count = (
 
 with st.sidebar:
 
-    st.markdown(
-        """
-        <div style="
-            font-size:28px;
-            font-weight:800;
-            margin-bottom:4px;
-        ">
-            🤖 AI DSA Tutor
+    st.markdown("""
+    <div style="text-align:center; padding:10px 0 25px 0;">
+        <div style="font-size:45px;">🤖</div>
+        <div style="font-size:25px; font-weight:800; color:white;">
+            AI DSA Tutor
         </div>
-
-        <div style="
-            color:#cbd5e1;
-            font-size:13px;
-            line-height:1.5;
-            margin-bottom:18px;
-        ">
-            Your intelligent companion for
-            Data Structures & Algorithms.
+        <div style="color:#94a3b8; font-size:13px;">
+            Learn • Practice • Improve
         </div>
-        """,
-        unsafe_allow_html=True
-    )
+    </div>
+    """, unsafe_allow_html=True)
 
-    st.divider()
+    st.markdown("### 🎯 Select DSA Topic")
 
-    st.markdown("### 🎯 Learning Center")
-
-    topics = sorted(
-        df["topic"].dropna().unique()
-    )
+    if topic_col:
+        topics = sorted(
+            df[topic_col].dropna().astype(str).unique().tolist()
+        )
+    else:
+        topics = ["All"]
 
     selected_topic = st.selectbox(
-        "Select DSA Topic",
-        topics
-    )
-
-    topic_df = (
-        df[df["topic"] == selected_topic]
-        .reset_index(drop=True)
+        "Topic",
+        topics,
+        label_visibility="collapsed"
     )
 
     st.divider()
 
+    # Dataset statistics
     st.markdown("### 📊 Dataset Overview")
 
-    st.write(
-        f"📚 **Problems:** {total_problems}"
-    )
-
-    st.write(
-        f"🧩 **Topics:** {total_topics}"
-    )
-
-    st.write(
-        f"🟢 **Easy:** {easy_count}"
-    )
-
-    st.write(
-        f"🟡 **Medium:** {medium_count}"
-    )
-
-    st.write(
-        f"🔴 **Hard:** {hard_count}"
-    )
-
-    st.divider()
-
     st.markdown(
-        """
-        <div style="
-            background:rgba(255,255,255,0.08);
-            padding:14px;
-            border-radius:12px;
-            font-size:12px;
-            line-height:1.6;
-        ">
-        🌳 <b>ML Model</b><br>
-        Decision Tree Classifier<br><br>
-
-        🧠 <b>ML Features</b><br>
-        5 problem characteristics<br><br>
-
-        ⚡ <b>Prediction</b><br>
-        Easy • Medium • Hard
-        </div>
-        """,
+        f"**📚 Problems:** {len(df)}",
         unsafe_allow_html=True
     )
 
+    st.markdown(
+        f"**🧩 Topics:** {len(topics)}",
+        unsafe_allow_html=True
+    )
+
+    if difficulty_col:
+        counts = df[difficulty_col].value_counts()
+
+        easy_count = counts.get("Easy", 0)
+        medium_count = counts.get("Medium", 0)
+        hard_count = counts.get("Hard", 0)
+
+        st.markdown(
+            f"🟢 **Easy:** {easy_count}"
+        )
+
+        st.markdown(
+            f"🟡 **Medium:** {medium_count}"
+        )
+
+        st.markdown(
+            f"🔴 **Hard:** {hard_count}"
+        )
+
+    st.divider()
+
+    st.markdown("### 🤖 ML Model")
+
+    st.markdown("""
+    **Decision Tree Classifier**
+
+    🌱 Beginner-friendly ML
+
+    🎯 Predicts:
+    Easy • Medium • Hard
+
+    🧠 Features:
+    5 problem characteristics
+    """)
+
 
 # =========================================================
-# HERO HEADER
+# HERO
 # =========================================================
 
-st.markdown(
-    """
-    <div class="hero">
+st.markdown("""
+<div class="hero">
 
-        <div class="hero-badge">
-            ✨ AI-POWERED LEARNING PLATFORM
-        </div>
-
-        <div class="hero-title">
-            🤖 AI DSA Tutor
-        </div>
-
-        <div class="hero-subtitle">
-            Practice Data Structures & Algorithms with
-            intelligent difficulty prediction, guided hints,
-            examples and complexity analysis.
-        </div>
-
+    <div class="hero-badge">
+        ✨ AI-POWERED LEARNING PLATFORM
     </div>
-    """,
-    unsafe_allow_html=True
-)
+
+    <div class="hero-title">
+        🤖 AI DSA Tutor
+    </div>
+
+    <div class="hero-subtitle">
+        Practice Data Structures & Algorithms with
+        intelligent difficulty prediction, helpful hints,
+        complexity analysis and AI-powered guidance.
+    </div>
+
+</div>
+""", unsafe_allow_html=True)
 
 
 # =========================================================
@@ -618,62 +659,62 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.markdown(
-    '<div class="section-subtitle">'
-    'Explore the DSA problem collection and practice with AI assistance.'
-    '</div>',
-    unsafe_allow_html=True
-)
-
 m1, m2, m3, m4 = st.columns(4)
 
 with m1:
-    st.markdown(
-        f"""
-        <div class="metric-card">
-            <div class="metric-icon">📚</div>
-            <div class="metric-number">{total_problems}</div>
-            <div class="metric-label">DSA Problems</div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    st.markdown(f"""
+    <div class="metric-card">
+        <div class="metric-icon">📚</div>
+        <div class="metric-number">{len(df)}</div>
+        <div class="metric-label">DSA Problems</div>
+    </div>
+    """, unsafe_allow_html=True)
 
 with m2:
-    st.markdown(
-        f"""
-        <div class="metric-card">
-            <div class="metric-icon">🧩</div>
-            <div class="metric-number">{total_topics}</div>
-            <div class="metric-label">Topics Covered</div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    st.markdown(f"""
+    <div class="metric-card">
+        <div class="metric-icon">🧩</div>
+        <div class="metric-number">{len(topics)}</div>
+        <div class="metric-label">Topics Covered</div>
+    </div>
+    """, unsafe_allow_html=True)
 
 with m3:
-    st.markdown(
-        """
-        <div class="metric-card">
-            <div class="metric-icon">🧠</div>
-            <div class="metric-number">5</div>
-            <div class="metric-label">ML Features</div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    st.markdown("""
+    <div class="metric-card">
+        <div class="metric-icon">🧠</div>
+        <div class="metric-number">5</div>
+        <div class="metric-label">ML Features</div>
+    </div>
+    """, unsafe_allow_html=True)
 
 with m4:
-    st.markdown(
-        """
-        <div class="metric-card">
-            <div class="metric-icon">🌳</div>
-            <div class="metric-number">AI</div>
-            <div class="metric-label">Decision Tree Model</div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    st.markdown("""
+    <div class="metric-card">
+        <div class="metric-icon">🌳</div>
+        <div class="metric-number">AI</div>
+        <div class="metric-label">Decision Tree Model</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+# =========================================================
+# FILTER PROBLEMS
+# =========================================================
+
+if topic_col:
+    filtered_df = df[
+        df[topic_col].astype(str) == str(selected_topic)
+    ].copy()
+else:
+    filtered_df = df.copy()
+
+
+if len(filtered_df) == 0:
+
+    st.warning("No problems available for this topic.")
+
+    st.stop()
 
 
 # =========================================================
@@ -681,21 +722,34 @@ with m4:
 # =========================================================
 
 st.markdown(
-    '<div class="section-title">🎯 Choose Your Challenge</div>',
+    '<div class="section-title">🎯 Choose a Problem</div>',
     unsafe_allow_html=True
 )
 
-problem_names = topic_df["question"].tolist()
+problem_names = []
 
-selected_problem = st.selectbox(
-    "Choose a problem to practice",
-    problem_names,
-    label_visibility="collapsed"
+for index, row in filtered_df.iterrows():
+
+    if problem_col:
+        name = get_text(row, problem_col)
+    else:
+        name = f"Problem {index + 1}"
+
+    problem_names.append((index, name))
+
+
+selected_problem_name = st.selectbox(
+    "Select a problem",
+    [x[1] for x in problem_names]
 )
 
-problem = topic_df[
-    topic_df["question"] == selected_problem
-].iloc[0]
+selected_index = next(
+    x[0]
+    for x in problem_names
+    if x[1] == selected_problem_name
+)
+
+selected_row = df.loc[selected_index]
 
 
 # =========================================================
@@ -707,63 +761,72 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-safe_question = html.escape(
-    str(problem["question"])
-)
+problem_text = get_text(selected_row, description_col)
 
-st.markdown(
-    f"""
-    <div class="problem-card">
+st.markdown(f"""
+<div class="problem-card">
 
-        <div class="problem-label">
-            {html.escape(str(problem["topic"]))} • DSA Challenge
-        </div>
-
-        <div class="problem-question">
-            {safe_question}
-        </div>
-
+    <div class="problem-title">
+        {selected_problem_name}
     </div>
-    """,
-    unsafe_allow_html=True
-)
+
+    <div class="problem-text">
+        {problem_text}
+    </div>
+
+</div>
+""", unsafe_allow_html=True)
 
 
 # =========================================================
-# EXAMPLE INPUT / OUTPUT
+# INFORMATION CARDS
 # =========================================================
 
-st.markdown(
-    '<div class="section-title">💻 Example</div>',
-    unsafe_allow_html=True
-)
+info1, info2, info3 = st.columns(3)
 
-example_col1, example_col2 = st.columns(2)
+with info1:
 
-with example_col1:
-
-    st.markdown(
-        '<div class="example-title">📥 Example Input</div>',
-        unsafe_allow_html=True
+    topic_value = (
+        get_text(selected_row, topic_col)
+        if topic_col else "Not available"
     )
 
-    st.code(
-        str(problem["example_input"]),
-        language="text"
+    st.markdown(f"""
+    <div class="info-card">
+        <div class="info-label">📌 TOPIC</div>
+        <div class="info-value">{topic_value}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+
+with info2:
+
+    time_value = (
+        get_text(selected_row, time_col)
+        if time_col else "Not available"
     )
 
+    st.markdown(f"""
+    <div class="info-card">
+        <div class="info-label">⏱️ TIME COMPLEXITY</div>
+        <div class="info-value">{time_value}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-with example_col2:
 
-    st.markdown(
-        '<div class="example-title">📤 Expected Output</div>',
-        unsafe_allow_html=True
+with info3:
+
+    space_value = (
+        get_text(selected_row, space_col)
+        if space_col else "Not available"
     )
 
-    st.code(
-        str(problem["example_output"]),
-        language="text"
-    )
+    st.markdown(f"""
+    <div class="info-card">
+        <div class="info-label">💾 SPACE COMPLEXITY</div>
+        <div class="info-value">{space_value}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 # =========================================================
@@ -771,542 +834,159 @@ with example_col2:
 # =========================================================
 
 st.markdown(
-    '<div class="section-title">💡 Smart Hints</div>',
+    '<div class="section-title">💡 Hints</div>',
     unsafe_allow_html=True
 )
 
-st.markdown(
-    """
-    <div class="hint-intro">
-        💡 Stuck? Reveal the hints one at a time and
-        try solving the problem yourself before opening the next hint.
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+if hint_col:
 
-hints_found = False
+    hints = get_hints(selected_row[hint_col])
 
-for i in range(1, 4):
+    if hints:
 
-    column_name = f"hint{i}"
-
-    if column_name in df.columns:
-
-        hint = problem[column_name]
-
-        if pd.notna(hint) and str(hint).strip() != "":
-
-            hints_found = True
+        for i, hint in enumerate(hints, start=1):
 
             with st.expander(
-                f"💡 Hint {i}  •  Click to reveal"
+                f"💡 Hint {i} — Click to reveal",
+                expanded=False
             ):
 
-                st.info(
-                    str(hint)
+                st.markdown(
+                    f"""
+                    <div class="hint-box">
+                        <span class="hint-number">Hint {i}</span>
+                        <br><br>
+                        {hint}
+                    </div>
+                    """,
+                    unsafe_allow_html=True
                 )
 
-
-if not hints_found:
-
-    st.warning(
-        "No hint available for this problem."
-    )
-
-
-# =========================================================
-# COMPLEXITY ANALYSIS
-# =========================================================
-
-st.markdown(
-    '<div class="section-title">⚡ Complexity Analysis</div>',
-    unsafe_allow_html=True
-)
-
-c1, c2, c3 = st.columns(3)
-
-with c1:
-
-    st.markdown(
-        f"""
-        <div class="info-card">
-
-            <div class="info-icon">⏱️</div>
-
-            <div class="info-label">
-                TIME COMPLEXITY
-            </div>
-
-            <div class="info-value">
-                {html.escape(str(problem["time_complexity"]))}
-            </div>
-
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-
-with c2:
-
-    st.markdown(
-        f"""
-        <div class="info-card">
-
-            <div class="info-icon">💾</div>
-
-            <div class="info-label">
-                SPACE COMPLEXITY
-            </div>
-
-            <div class="info-value">
-                {html.escape(str(problem["space_complexity"]))}
-            </div>
-
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-
-with c3:
-
-    st.markdown(
-        f"""
-        <div class="info-card">
-
-            <div class="info-icon">📚</div>
-
-            <div class="info-label">
-                TOPIC
-            </div>
-
-            <div class="info-value">
-                {html.escape(str(problem["topic"]))}
-            </div>
-
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-
-# =========================================================
-# ML FEATURE EXTRACTION
-# =========================================================
-
-question = str(problem["question"])
-
-question_length = len(question)
-
-# Count actual hints
-hint_count = 0
-
-for i in range(1, 4):
-
-    column_name = f"hint{i}"
-
-    if column_name in df.columns:
-
-        hint = problem[column_name]
-
-        if pd.notna(hint) and str(hint).strip() != "":
-            hint_count += 1
-
-
-# Recursion / backtracking feature
-has_recursion = int(
-    any(
-        word in question.lower()
-        for word in [
-            "recursion",
-            "recursive",
-            "backtracking"
-        ]
-    )
-)
-
-
-# Nested loop feature
-has_nested_loop = int(
-    "nested loop" in question.lower()
-)
-
-
-# Logarithmic feature
-uses_logarithmic = int(
-    "log" in str(
-        problem["time_complexity"]
-    ).lower()
-)
-
-
-# =========================================================
-# PREPARE MODEL INPUT
-# =========================================================
-
-features = [
-    "question_length",
-    "hint_count",
-    "has_recursion",
-    "has_nested_loop",
-    "uses_logarithmic"
-]
-
-input_data = pd.DataFrame(
-    [[
-        question_length,
-        hint_count,
-        has_recursion,
-        has_nested_loop,
-        uses_logarithmic
-    ]],
-    columns=features
-)
-
-
-# =========================================================
-# AI PREDICTION
-# =========================================================
-
-prediction = model.predict(input_data)[0]
-
-
-# =========================================================
-# AI CONFIDENCE
-# =========================================================
-
-confidence = None
-
-if hasattr(model, "predict_proba"):
-
-    probabilities = model.predict_proba(
-        input_data
-    )[0]
-
-    confidence = float(
-        max(probabilities) * 100
-    )
-
-
-# =========================================================
-# AI RESULT
-# =========================================================
-
-st.markdown(
-    '<div class="section-title">🤖 AI Difficulty Analysis</div>',
-    unsafe_allow_html=True
-)
-
-ai_col1, ai_col2 = st.columns([1.5, 1])
-
-with ai_col1:
-
-    if prediction == "Easy":
-        badge_class = "easy"
-        icon = "🟢"
-
-    elif prediction == "Medium":
-        badge_class = "medium"
-        icon = "🟡"
-
     else:
-        badge_class = "hard"
-        icon = "🔴"
+
+        st.info("No hint available for this problem.")
+
+else:
+
+    st.info(
+        "No hint column was found in problems.csv."
+    )
+
+
+# =========================================================
+# AI DIFFICULTY PREDICTION
+# =========================================================
+
+st.markdown(
+    '<div class="section-title">🤖 AI Difficulty Prediction</div>',
+    unsafe_allow_html=True
+)
+
+try:
+
+    features_df = calculate_features(selected_row)
+
+    prediction = model.predict(features_df)[0]
+
+    # Confidence
+    confidence = None
+
+    if hasattr(model, "predict_proba"):
+
+        probabilities = model.predict_proba(features_df)[0]
+
+        confidence = max(probabilities) * 100
 
     st.markdown(
         f"""
-        <div class="ai-panel">
+        <div class="ai-box">
 
             <div class="ai-title">
-                AI PREDICTED DIFFICULTY
+                🌳 DECISION TREE AI PREDICTION
             </div>
 
-            <div class="ai-description">
-                Decision Tree analysis based on
-                five problem characteristics.
-            </div>
-
-            <div class="difficulty-badge {badge_class}">
-                {icon} {html.escape(str(prediction))}
+            <div class="ai-prediction">
+                {difficulty_badge(prediction)}
             </div>
 
         </div>
         """,
         unsafe_allow_html=True
     )
-
-
-with ai_col2:
 
     if confidence is not None:
 
-        st.markdown(
-            """
-            <div style="
-                background:white;
-                border:1px solid #e5e7eb;
-                border-radius:20px;
-                padding:25px;
-                box-shadow:0 7px 22px rgba(15,23,42,0.06);
-            ">
-            """,
-            unsafe_allow_html=True
-        )
-
-        st.markdown(
-            "### 🎯 AI Confidence"
-        )
-
-        st.markdown(
-            f"""
-            <div style="
-                font-size:30px;
-                font-weight:800;
-                color:#4f46e5;
-                margin-bottom:5px;
-            ">
-                {confidence:.1f}%
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
         st.progress(
-            min(confidence / 100, 1.0)
+            min(int(confidence), 100)
         )
 
         st.caption(
-            "Confidence calculated from the Decision Tree model."
+            f"AI Confidence: {confidence:.1f}%"
         )
 
-        st.markdown(
-            "</div>",
-            unsafe_allow_html=True
+    # Show model features for transparency
+    with st.expander("🔍 View features used by the AI"):
+
+        st.dataframe(
+            features_df,
+            use_container_width=True,
+            hide_index=True
         )
 
-    else:
+except Exception as e:
 
-        st.info(
-            "AI confidence is not available for this model."
-        )
+    st.error("⚠️ AI prediction could not be calculated.")
+
+    with st.expander("Technical details"):
+        st.code(str(e))
 
 
 # =========================================================
-# ML FEATURES
+# ORIGINAL DATASET DIFFICULTY
 # =========================================================
 
-with st.expander("🧠 See How the AI Made This Prediction"):
+if difficulty_col:
+
+    actual_difficulty = get_text(
+        selected_row,
+        difficulty_col
+    )
 
     st.markdown(
-        """
-        The Decision Tree model analyzes five numerical
-        features extracted from the selected DSA problem.
-        """
+        '<div class="section-title">📌 Dataset Information</div>',
+        unsafe_allow_html=True
     )
-
-    f1, f2, f3, f4, f5 = st.columns(5)
-
-    with f1:
-
-        st.markdown(
-            f"""
-            <div class="feature-box">
-                <div class="feature-value">
-                    {question_length}
-                </div>
-                <div class="feature-label">
-                    Question Length
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-    with f2:
-
-        st.markdown(
-            f"""
-            <div class="feature-box">
-                <div class="feature-value">
-                    {hint_count}
-                </div>
-                <div class="feature-label">
-                    Hint Count
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-    with f3:
-
-        st.markdown(
-            f"""
-            <div class="feature-box">
-                <div class="feature-value">
-                    {"Yes" if has_recursion else "No"}
-                </div>
-                <div class="feature-label">
-                    Recursion
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-    with f4:
-
-        st.markdown(
-            f"""
-            <div class="feature-box">
-                <div class="feature-value">
-                    {"Yes" if has_nested_loop else "No"}
-                </div>
-                <div class="feature-label">
-                    Nested Loop
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-    with f5:
-
-        st.markdown(
-            f"""
-            <div class="feature-box">
-                <div class="feature-value">
-                    {"Yes" if uses_logarithmic else "No"}
-                </div>
-                <div class="feature-label">
-                    Log Complexity
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-
-# =========================================================
-# DATASET REFERENCE
-# =========================================================
-
-with st.expander("📊 View Dataset Reference"):
-
-    actual_difficulty = problem["difficulty"]
-
-    st.write(
-        "This is the original difficulty label stored "
-        "in the training dataset."
-    )
-
-    if actual_difficulty == "Easy":
-
-        st.success(
-            f"Dataset label: {actual_difficulty}"
-        )
-
-    elif actual_difficulty == "Medium":
-
-        st.warning(
-            f"Dataset label: {actual_difficulty}"
-        )
-
-    else:
-
-        st.error(
-            f"Dataset label: {actual_difficulty}"
-        )
 
     st.caption(
-        "The AI prediction above is generated independently "
-        "by the trained Decision Tree model."
+        "The following is the difficulty stored in the dataset. "
+        "The AI prediction above is generated by the trained Decision Tree."
     )
 
-
-# =========================================================
-# ABOUT PROJECT
-# =========================================================
-
-with st.expander("ℹ️ About AI DSA Tutor"):
-
-    about_col1, about_col2 = st.columns(2)
-
-    with about_col1:
-
-        st.markdown(
-            """
-            ### 🎓 What is AI DSA Tutor?
-
-            AI DSA Tutor is an educational AI/ML application
-            designed to help students practice Data Structures
-            and Algorithms.
-
-            It provides:
-
-            - 📚 DSA practice problems
-            - 💡 Problem-specific hints
-            - ⚡ Time complexity
-            - 💾 Space complexity
-            - 🤖 ML-based difficulty prediction
-            - 🎯 Prediction confidence
-            """
-        )
-
-    with about_col2:
-
-        st.markdown(
-            """
-            ### 🧠 Machine Learning
-
-            The project uses a **Decision Tree Classifier**.
-
-            The model analyzes:
-
-            1. Question length
-            2. Number of hints
-            3. Recursion presence
-            4. Nested-loop presence
-            5. Logarithmic complexity
-
-            The model predicts:
-
-            🟢 Easy
-
-            🟡 Medium
-
-            🔴 Hard
-            """
-        )
+    st.markdown(
+        difficulty_badge(actual_difficulty),
+        unsafe_allow_html=True
+    )
 
 
 # =========================================================
 # FOOTER
 # =========================================================
 
-st.markdown(
-    """
-    <div class="footer">
+st.markdown("<br><br>", unsafe_allow_html=True)
 
-        🤖 <b>AI DSA Tutor</b>
-        &nbsp; • &nbsp;
-        Python
-        &nbsp; • &nbsp;
-        Pandas
-        &nbsp; • &nbsp;
-        Scikit-learn
-        &nbsp; • &nbsp;
-        Decision Tree
-        &nbsp; • &nbsp;
-        Streamlit
-
-        <br><br>
-
-        Built as an AI/ML educational project
-
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+st.markdown("""
+<div style="
+    text-align:center;
+    padding:25px;
+    border-top:1px solid #29365e;
+    color:#64748b;
+">
+    🤖 <b style="color:#a78bfa;">AI DSA Tutor</b>
+    &nbsp; • &nbsp;
+    Learn DSA with Machine Learning
+    <br><br>
+    <span style="font-size:12px;">
+        Python • Pandas • Scikit-learn • Streamlit • Decision Tree
+    </span>
+</div>
+""", unsafe_allow_html=True)
