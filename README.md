@@ -25,7 +25,6 @@ The main purpose of this project is to demonstrate how **Machine Learning can be
 
 ---
 🚀 Live Demo
-https://ai-dsa-tutor-xttcrtgy7kavje5n62mypq.streamlit.app/#hint
 https://ai-dsa-tutor-xttcrtgy7kavje5n62mypq.streamlit.app/
 
 ## 🎯 Objectives
